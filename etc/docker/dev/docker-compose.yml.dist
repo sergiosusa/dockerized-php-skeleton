@@ -1,0 +1,43 @@
+version: '3.6'
+
+networks:
+  default:
+    external:
+      name: project_network
+
+services:
+  fpm:
+    build:
+      context: etc/docker/dev/fpm
+    container_name: project-fpm
+    volumes:
+    - .:/var/www/project
+    working_dir: /var/www/project
+
+  server:
+    build:
+      context: etc/docker/dev/nginx
+    container_name: project
+    networks:
+      default:
+        aliases:
+        - project.local
+    ports:
+      - 80:80
+    volumes:
+    - .:/var/www/project
+
+  mysql:
+    image: mysql:5.7
+    container_name: project-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root
+      - MYSQL_DATABASE=project
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
+    driver: local

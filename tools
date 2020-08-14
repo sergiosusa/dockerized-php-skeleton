@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+# Output colors
+NORMAL="\e[0m"
+CYAN="\e[36m"
+YELLOW="\e[33m"
+BLUE="\e[34m"
+RED="\e[31m"
+
+CONTAINER_NAME="project-fpm"
+DOCKER_EXEC_USER="www-data"
+
+help() { #Display available commands' list
+  printTitleOption "Available commands"
+  grep -E '\w+\(\).+\#.+' tools | awk 'BEGIN { FS = "{" };{ gsub(/\#/, "", $2) };{ gsub(/\(\)/, "", $1) };{ printf  "   \033[33m> \033[34m%s\033[0m-%s\n", $1 ,$2  }';
+  echo "-----------------------------------------------------------------------"
+}
+
+printTitleOption() {
+  echo "-----------------------------------------------------------------------"
+  echo -e "                      $CYAN$1$NORMAL                 "
+  echo "-----------------------------------------------------------------------"
+}
+
+printHelpOption() {
+  echo -e "   $YELLOW>$NORMAL $BLUE$1$NORMAL - $2"
+}
+
+init-containers() { #Initialize, build and start containers.
+  log "Initialize, build and start containers."
+  copy-docker-compose-files
+  create-network
+  build
+  start
+}
+
+copy-docker-compose-files() {
+  log "Copy docker compose files"
+  cp etc/docker/dev/docker-compose.yml.dist ./docker-compose.yml
+}
+
+create-network() {
+  log "Create a project network"
+  docker network create project_network || true
+}
+
+build() { #To build the docker images.
+  log "Build the docker compose images"
+  docker-compose build
+}
+
+start() { #To lift docker containers.
+  log "Lift the docker containers"
+  docker-compose up -d
+}
+
+stop() { #To stop docker containers.
+  log "Stop docker containers"
+  docker-compose down
+}
+
+bash() { #Enter to docker container's shell (use container's name as a first parameter and user as a second).
+
+  if [ -z "$1" ]
+  then
+    error "Container's name is empty."
+    return
+  fi
+
+  log "Entering $1 container's shell as a \"${2:-root}\" user."
+  docker exec -it --user "${2:-root}" "$1" /bin/bash
+}
+
+init-symfony-project() { #Initialize a symfony project (use "symfony/skeleton" or "symfony/website-skeleton" as a parameter to choose the type of installation).
+
+  log "Initialize a symfony project: $1"
+  docker exec -it --user www-data $CONTAINER_NAME composer create-project "$1" /tmp/temporary
+  docker exec -it --user www-data $CONTAINER_NAME rsync -rtv /tmp/temporary/ ./
+  docker exec -it --user www-data $CONTAINER_NAME rm -rf /tmp/temporary
+}
+
+composer-install() { #Execute composer install
+  log "Composer install"
+  docker exec --user "$DOCKER_EXEC_USER" "$CONTAINER_NAME" php -dmemory_limit=-1 /usr/bin/composer --no-interaction install
+}
+
+xdebug-status() { #Show the xdebug status
+  XDEBUG="$(docker exec -it --user root project-fpm php -m | grep xdebug)"
+
+  if [ -z "$XDEBUG" ];
+  then
+      echo "PHP XDebug is disabled"
+  else
+      echo "PHP XDebug is enabled"
+  fi
+  }
+
+xdebug-on() { #Enable xdebug module
+
+XDEBUG="$(docker exec -it --user root project-fpm php -m | grep xdebug)"
+
+if [ -z "$XDEBUG" ];
+then
+    docker exec -it --user root $CONTAINER_NAME bash -c "echo 'extension=xdebug.so' >> /opt/bitnami/php/etc/php.ini"
+fi
+  xdebug-status
+}
+
+xdebug-off() { #Disable xdebug module
+  docker exec -it --user root $CONTAINER_NAME bash -c "sed '/extension=xdebug.so/d' /opt/bitnami/php/etc/php.ini > /opt/bitnami/php/etc/php.ini.new"
+  docker exec -it --user root $CONTAINER_NAME bash -c "mv /opt/bitnami/php/etc/php.ini.new /opt/bitnami/php/etc/php.ini"
+  xdebug-status
+}
+
+
+log() {
+  echo -e "$RED>$NORMAL $BLUE$1$NORMAL"
+}
+
+error() {
+  echo -e "$RED >>> ERROR: $1$NORMAL"
+}
+
+${*:-help}
