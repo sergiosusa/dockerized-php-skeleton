@@ -1,4 +1,4 @@
-FROM bitnami/php-fpm:7.4
+FROM bitnami/php-fpm:8.2
 
 RUN true \
  && apt-get -qq update \

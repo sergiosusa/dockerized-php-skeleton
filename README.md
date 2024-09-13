@@ -19,7 +19,7 @@ Also, includes a bash tool to initialize the docker containers and Symfony 5 pro
 
 if you need an empty Symfony 5 Project:
 
-- Run ``./tools init-symfony-project symfony/website-skeleton`` to initialize the Symfony 5 project.
+- Run ``./tools init-symfony-project symfony/skeleton:"7.1.*"`` to initialize the Symfony 7 project.
 - Add ``0.0.0.0 project.local`` to ``/etc/hosts``.
 - Go to the browser and enter to: http://project.local/.
 

@@ -75,6 +75,7 @@ init-symfony-project() { #Initialize a symfony project (use "symfony/skeleton" o
 
   log "Initialize a symfony project: $1"
   docker exec -it --user www-data $CONTAINER_NAME composer create-project "$1" /tmp/temporary
+  docker exec -it --user www-data $CONTAINER_NAME composer require webapp --working-dir=/tmp/temporary
   docker exec -it --user www-data $CONTAINER_NAME rsync -rtv /tmp/temporary/ ./
   docker exec -it --user www-data $CONTAINER_NAME rm -rf /tmp/temporary
 }
