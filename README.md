@@ -8,7 +8,7 @@ Includes:
 - Mysql.
 - PHP (extensions, composer, so on.).
 
-Also, includes a bash tool to initialize the docker containers and Symfony 5 project easily.
+Also, includes a bash tool to initialize the docker containers and Symfony 7 project easily.
 
 > **Note:** This project was tested on linux based machines only. 
 
@@ -17,7 +17,7 @@ Also, includes a bash tool to initialize the docker containers and Symfony 5 pro
 - Clone the project.
 - Run ``./tools init-containers`` to build and start all the containers.
 
-if you need an empty Symfony 5 Project:
+if you need an empty Symfony 7 Project:
 
 - Run ``./tools init-symfony-project symfony/skeleton:"7.1.*"`` to initialize the Symfony 7 project.
 - Add ``0.0.0.0 project.local`` to ``/etc/hosts``.
